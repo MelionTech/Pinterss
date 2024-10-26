@@ -199,7 +199,7 @@ if (!boardName) {
     modifiedUrl = `https://pinterest.com/${username}/${boardName}.rss`;
 }
 
-const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(modifiedUrl)}&api_key=h4ik79z2pzvr97pqrqyz8menfhsz3g1yefsve4zd`;
+const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(modifiedUrl)};
 
 
                 fetch(apiUrl)
