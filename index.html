@@ -178,105 +178,107 @@
 
     <script>
         document.getElementById('checkButton').addEventListener('click', function() {
-            const button = this;
-            let originalUrl = document.getElementById('pinterestUrl').value.trim();
+    const button = this;
+    let originalUrl = document.getElementById('pinterestUrl').value.trim();
 
-            button.textContent = 'جار التحقق...';
-            button.disabled = true;
+    button.textContent = 'جار التحقق...';
+    button.disabled = true;
 
-            const match = originalUrl.match(/pinterest\.com\/([^\/]+)(?:\/([^\/]+))?/);
-            
-            if (match) {
-                const username = match[1];
-                const boardName = match[2] || '';
+    // إزالة أي معلمات من الرابط
+    const cleanUrl = originalUrl.split('?')[0];
+    const match = cleanUrl.match(/pinterest\.com\/([^\/]+)(?:\/([^\/]+))?/);
+    
+    if (match) {
+        const username = match[1];
+        const boardName = match[2] || '';
 
-                let modifiedUrl;
-if (!boardName) {
-    modifiedUrl = `https://pinterest.com/${username}/feed.rss`;
-} else if (boardName.toLowerCase() === 'pins') {
-    modifiedUrl = `https://pinterest.com/${username}/feed.rss`;
-} else {
-    modifiedUrl = `https://pinterest.com/${username}/${boardName}.rss`;
-}
+        let modifiedUrl;
+        if (!boardName) {
+            modifiedUrl = `https://pinterest.com/${username}/feed.rss`;
+        } else if (boardName.toLowerCase() === 'pins') {
+            modifiedUrl = `https://pinterest.com/${username}/feed.rss`;
+        } else {
+            modifiedUrl = `https://pinterest.com/${username}/${boardName}.rss`;
+        }
 
-const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(modifiedUrl)}`;
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(modifiedUrl)}`;
 
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                button.textContent = 'تحقق';
+                button.disabled = false;
 
-                fetch(apiUrl)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        button.textContent = 'تحقق';
-                        button.disabled = false;
-
-                        if (data.status !== 'ok') {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'خطأ',
-                                text: 'رابط غير صالح: ' + modifiedUrl
-                            });
-                        } else {
-                            const title = data.feed.title || 'لا يوجد عنوان';
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'نجاح',
-                                html: `
-                                    <div style="background-color: red; color: white; padding: 10px; border-radius: 5px; display: flex; align-items: center;">
-                                        <i class="fab fa-pinterest" style="margin-left: 10px; margin-right: 10px; font-size: 24px;"></i>
-                                        ${title}
-                                    </div>
-                                    <br>
-                                    <strong>رابط الخلاصة:</strong> <a href="${modifiedUrl}" target="_blank">${modifiedUrl}</a><br>
-                                    <button id="copyButton" class="swal2-confirm swal2-styled" style="background-color: orange; color: white; border: none; width: 150px; padding: 7px 1px; border-radius: 5px;">
-                                        <i class="fas fa-rss" style="margin-right: 5px; color: white;"></i> نسخ الرابط
-                                    </button>
-                                `,
-                                didOpen: () => {
-                                    const copyButton = document.getElementById('copyButton');
-                                    copyButton.addEventListener('click', () => {
-                                        navigator.clipboard.writeText(modifiedUrl).then(() => {
-                                            Swal.fire({
-                                                icon: 'success',
-                                                title: 'تم النسخ!',
-                                                text: 'تم نسخ الرابط إلى الحافظة.'
-                                            });
-                                        }).catch(err => {
-                                            Swal.fire({
-                                                icon: 'error',
-                                                title: 'خطأ',
-                                                text: 'حدث خطأ أثناء النسخ: ' + err.message
-                                            });
-                                        });
-                                    });
-                                }
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        button.textContent = 'تحقق';
-                        button.disabled = false;
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'خطأ',
-                            text: 'حدث خطأ: ' + error.message
-                        });
+                if (data.status !== 'ok') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: 'رابط غير صالح: ' + modifiedUrl
                     });
-            } else {
+                } else {
+                    const title = data.feed.title || 'لا يوجد عنوان';
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'نجاح',
+                        html: `
+                            <div style="background-color: red; color: white; padding: 10px; border-radius: 5px; display: flex; align-items: center;">
+                                <i class="fab fa-pinterest" style="margin-left: 10px; margin-right: 10px; font-size: 24px;"></i>
+                                ${title}
+                            </div>
+                            <br>
+                            <strong>رابط الخلاصة:</strong> <a href="${modifiedUrl}" target="_blank">${modifiedUrl}</a><br>
+                            <button id="copyButton" class="swal2-confirm swal2-styled" style="background-color: orange; color: white; border: none; width: 150px; padding: 7px 1px; border-radius: 5px;">
+                                <i class="fas fa-rss" style="margin-right: 5px; color: white;"></i> نسخ الرابط
+                            </button>
+                        `,
+                        didOpen: () => {
+                            const copyButton = document.getElementById('copyButton');
+                            copyButton.addEventListener('click', () => {
+                                navigator.clipboard.writeText(modifiedUrl).then(() => {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'تم النسخ!',
+                                        text: 'تم نسخ الرابط إلى الحافظة.'
+                                    });
+                                }).catch(err => {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'خطأ',
+                                        text: 'حدث خطأ أثناء النسخ: ' + err.message
+                                    });
+                                });
+                            });
+                        }
+                    });
+                }
+            })
+            .catch(error => {
                 button.textContent = 'تحقق';
                 button.disabled = false;
 
                 Swal.fire({
                     icon: 'error',
                     title: 'خطأ',
-                    text: 'يرجى إدخال رابط صحيح.'
+                    text: 'حدث خطأ: ' + error.message
                 });
-            }
+            });
+    } else {
+        button.textContent = 'تحقق';
+        button.disabled = false;
+
+        Swal.fire({
+            icon: 'error',
+            title: 'خطأ',
+            text: 'يرجى إدخال رابط صحيح.'
         });
+    }
+});
+
 
         let lastHeight = window.innerHeight;
 
